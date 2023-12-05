@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import time
 import os
-from models.deep_vit import ViT
+from models.vit import ViT
 
 # load datasets
 transform = transforms.Compose([
@@ -51,6 +51,7 @@ def train_epoch(model, dataloader, loss_function, optimizer, device, epoch):
         optimizer.zero_grad()
 
         outputs = model(inputs)
+
         loss = loss_function(outputs, labels)
 
         loss.backward()
@@ -73,8 +74,8 @@ model.to(device)
 # model name
 model_name = 'simplified_block_vit'
 
-num_epochs = 10
-checkpoint_freq = 2
+num_epochs = 25
+checkpoint_freq = 5
 artifact_directory = './artifacts'
 os.makedirs(artifact_directory, exist_ok=True)
 

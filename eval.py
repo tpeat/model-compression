@@ -8,13 +8,16 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 
-from models.deep_vit import ViT
+from models.teacher_vit import ViT
+
+# loss required to load models that use it
+from loss.distillation_loss import DistillationLoss
 
 # Define the device
 device = torch.device('mps')
 
 # Load the saved model checkpoint
-checkpoint_path = './artifacts/simplified_block_vit_epoch_2.pth'  # Update with your checkpoint path
+checkpoint_path = './artifacts/student_vit_epoch_20.pth'  # Update with your checkpoint path
 checkpoint = torch.load(checkpoint_path, map_location=device)
 
 model = ViT(
@@ -73,7 +76,7 @@ def imshow(img):
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.axis('off')
 
-def viz():
+def viz_predictions():
     dataiter = iter(testloader)
     images, labels = [], []
 
@@ -100,4 +103,36 @@ def viz():
     plt.show()
 
 # call visualization
-viz()
+viz_predictions()
+
+# visualize training times on linear plot
+def read_training_times(file_path):
+    with open(file_path, 'r') as file:
+        times = file.readlines()
+        times = [float(time.strip()) for time in times]
+    return times
+
+def plot_training_times(file1, file2):
+    times1 = read_training_times(file1)
+    times2 = read_training_times(file2)
+
+    min_epochs = min(len(times1), len(times2))
+
+    epochs1 = range(1, len(times1) + 1)
+    epochs2 = range(1, len(times2) + 1)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs1, times1, label=file1, marker='o')
+    plt.plot(epochs2, times2, label=file2, marker='x')
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Training Time (seconds)')
+    plt.title('Training Time Comparison')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+# Example usage
+file1 = './artifacts/simplified_block_vit_training_times.txt'
+file2 = './artifacts/student_vit_training_times.txt'
+plot_training_times(file1, file2)
