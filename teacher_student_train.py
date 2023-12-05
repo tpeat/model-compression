@@ -36,7 +36,7 @@ def load_teacher_model(checkpoint_path, device):
     return teacher_model
 
 
-teacher_model_path = './artifacts/simplified_block_vit_epoch_15.pth'
+teacher_model_path = './artifacts/teacher_vit_epoch_25.pth'
 teacher_model = load_teacher_model(teacher_model_path, device)
 
 # get model, also add option to resume from checkpoint by loading these things:
@@ -103,7 +103,7 @@ def train_epoch(student_model, teacher_model, dataloader, loss_function, optimiz
 model.to(device)
 
 # model name
-model_name = 'student_vit'
+model_name = 'student_vit_simplified'
 
 num_epochs = 25
 checkpoint_freq = 5

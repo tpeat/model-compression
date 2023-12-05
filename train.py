@@ -4,7 +4,11 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import time
 import os
-from models.vit import ViT
+
+# import specific model
+from models.teacher_vit import ViT
+
+device = torch.device('mps')
 
 # load datasets
 transform = transforms.Compose([
@@ -16,23 +20,38 @@ train_dataset = datasets.CIFAR10(root='./data/cifar10', train=True, download=Tru
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 
 # get model, also add option to resume from checkpoint by loading these things:
-image_size = 32  # CIFAR-10 images are 32x32
-patch_size = 4   # Size of the patches to be extracted from the images
-dim = 256        # Dimension of the transformer layers
-depth = 4        # Number of transformer blocks
-heads = 4        # Number of heads for the multi-head attention
-mlp_dim = 512    # Dimension of the feed-forward network
-num_classes = 10
+# image_size = 32  # CIFAR-10 images are 32x32
+# patch_size = 4   # Size of the patches to be extracted from the images
+# dim = 256        # Dimension of the transformer layers
+# depth = 4        # Number of transformer blocks
+# heads = 4        # Number of heads for the multi-head attention
+# mlp_dim = 512    # Dimension of the feed-forward network
+# num_classes = 10
 
-model = ViT(
-    image_size=image_size,
-    patch_size=patch_size,
-    dim=dim,
-    depth=depth,
-    heads=heads,
-    mlp_dim=mlp_dim,
-    num_classes=num_classes
-)
+checkpoint_path = './artifacts/teacher_vit_epoch_25.pth'
+from_checkpoint = True
+
+if from_checkpoint:
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    image_size=checkpoint['image_size']
+    patch_size=checkpoint['patch_size']
+    dim=checkpoint['dim']
+    depth=checkpoint['depth']
+    heads=checkpoint['heads']
+    mlp_dim=checkpoint['mlp_dim']
+    num_classes=checkpoint['num_classes']
+
+    model = ViT(
+        image_size=image_size,
+        patch_size=patch_size,
+        dim=dim,
+        depth=depth,
+        heads=heads,
+        mlp_dim=mlp_dim,
+        num_classes=num_classes
+    )
+
+    model.load_state_dict(checkpoint['model_state_dict'])
 
 print(f"Model Parameters: {sum(p.numel() for p in model.parameters())}")
 
@@ -68,13 +87,15 @@ def train_epoch(model, dataloader, loss_function, optimizer, device, epoch):
     return running_loss
 
 
-device = torch.device('mps')
 model.to(device)
 
 # model name
-model_name = 'simplified_block_vit'
+model_name = 'teacher_vit'
 
 num_epochs = 25
+
+# resumed epoch if existing
+resumed_epoch = 25
 checkpoint_freq = 5
 artifact_directory = './artifacts'
 os.makedirs(artifact_directory, exist_ok=True)
@@ -91,7 +112,7 @@ for epoch in range(num_epochs):
     # start timer
     start_time = time.time()
 
-    train_epoch(model, train_loader, loss_function, optimizer, device, epoch)
+    train_epoch(model, train_loader, loss_function, optimizer, device, resumed_epoch + epoch)
     
     end_time = time.time()
     duration = end_time - start_time
@@ -99,7 +120,7 @@ for epoch in range(num_epochs):
 
     # save model
     if (epoch + 1) % checkpoint_freq == 0:
-        checkpoint_path = os.path.join(artifact_directory, f'{model_name}_epoch_{epoch+1}.pth')
+        checkpoint_path = os.path.join(artifact_directory, f'{model_name}_epoch_{resumed_epoch+epoch+1}.pth')
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),

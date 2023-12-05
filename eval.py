@@ -8,7 +8,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 
-from models.teacher_vit import ViT
+from models.vit import ViT
 
 # loss required to load models that use it
 from loss.distillation_loss import DistillationLoss
@@ -17,7 +17,7 @@ from loss.distillation_loss import DistillationLoss
 device = torch.device('mps')
 
 # Load the saved model checkpoint
-checkpoint_path = './artifacts/student_vit_epoch_20.pth'  # Update with your checkpoint path
+checkpoint_path = './artifacts/student_vit_simplified_epoch_15.pth'  # Update with your checkpoint path
 checkpoint = torch.load(checkpoint_path, map_location=device)
 
 model = ViT(
@@ -33,6 +33,8 @@ model = ViT(
 model.load_state_dict(checkpoint['model_state_dict'])
 model.to(device)
 model.eval()
+
+print(f"Model Parameters: {sum(p.numel() for p in model.parameters())}")
 
 transform = transforms.Compose([
     transforms.ToTensor(),
