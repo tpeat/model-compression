@@ -31,6 +31,7 @@ mlp_dim = 512    # Dimension of the feed-forward network
 20th epoch: 67% accuracy
 25th epoch: 68.5% accuracy
 
+
 If not able to improve might want to pivot to pretrained backbone to avoid computation overhead
 
 **Training specifics**
@@ -54,7 +55,9 @@ Output of larger model is now a probability vector rather than a sparse label wh
 * Therefore, the increase in training time seen in the following graph isn't a valid spike, however, the baseline from the beginning was still larger than that of student
 * reran student training alone and saw drastic speedup in time >10seconds even in early epochs where learning rate is high
 
-![](artifacts/training_time_differences.png)
+![](artifacts/teacher_time_25-50_plot.png)
+
+![](artifacts/teacher_45_confusion.png)
 
 ## Improved Tranformer Blocks
 
